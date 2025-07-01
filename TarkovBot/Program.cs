@@ -29,7 +29,7 @@ builder.Services
         options.UseSqlServer(connectionString); 
     })
     .AddSingleton<TeamKillsController>()
-    .AddScoped<ITeamKills,TeamKills>();
+    .AddScoped<ITeamKillsService,TeamKillsService>();
 
 var host = builder.Build();
 

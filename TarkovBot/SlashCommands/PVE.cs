@@ -54,7 +54,6 @@ public class PVE:ApplicationCommandModule<ApplicationCommandContext>
                 {
                     { 1, ":first_place:" },
                     { 2, ":second_place:" },
-                    
                     { 3, ":third_place:" }
                 };
                 titleEmbed.Description += $"{(leaderboardCounter>3?leaderboardCounter+".": medals[leaderboardCounter])} {killer.GlobalName} - {res.Kills.Count} {(res.Kills.Count == 1 ? "kill" : "kills")}\n";

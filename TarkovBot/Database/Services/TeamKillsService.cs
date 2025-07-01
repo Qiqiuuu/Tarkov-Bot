@@ -5,11 +5,11 @@ using TarkovBot.Database.Modules;
 
 namespace TarkovBot.Database.Services;
 
-public class TeamKills:ITeamKills
+public class TeamKillsService:ITeamKillsService
 {
     private readonly DatabaseContext _context;
 
-    public TeamKills(DatabaseContext context)
+    public TeamKillsService(DatabaseContext context)
     {
         _context = context;
     }
