@@ -1,4 +1,6 @@
-﻿using TarkovBot.Database.Services;
+﻿using System.Collections.Concurrent;
+using TarkovBot.Database.DTOs;
+using TarkovBot.Database.Services;
 
 namespace TarkovBot.Database.Controllers;
 
@@ -11,9 +13,18 @@ public class TwitterRetrieverController
         _twitterRetrieverService = twitterRetrieverService;
     }
 
-    public async Task AddTracking(ulong channelId, int accountId)
+    public async Task AddTracking(ulong channelId, long accountId)
     {
         await _twitterRetrieverService.AddTracking(channelId, accountId);
     }
-    
+
+    public async Task<List<GetTweet>> GetRecentTweets()
+    {
+        return await _twitterRetrieverService.GetRecentTweets();
+    }
+
+    public async Task UpdateTweets(long AccountId, long TweetId)
+    {
+        await _twitterRetrieverService.UpdateTweet(AccountId, TweetId);
+    }
 } 

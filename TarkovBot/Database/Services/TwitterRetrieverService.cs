@@ -1,4 +1,7 @@
-﻿using TarkovBot.Database.Data;
+﻿using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using TarkovBot.Database.Data;
+using TarkovBot.Database.DTOs;
 using TarkovBot.Database.Modules;
 
 namespace TarkovBot.Database.Services;
@@ -12,7 +15,7 @@ public class TwitterRetrieverService:ITwitterRetrieverService
         _context = context;
     }
 
-    public Task AddTracking(ulong channelId,int accountId)
+    public Task AddTracking(ulong channelId,long accountId)
     {
         var tracking = new TwitterPost()
         {
@@ -22,5 +25,25 @@ public class TwitterRetrieverService:ITwitterRetrieverService
         };
         _context.TwitterPosts.Add(tracking);
         return _context.SaveChangesAsync();
+    }
+
+    public async Task<List<GetTweet>> GetRecentTweets()
+    {
+        return await _context.TwitterPosts
+            .GroupBy(e => e.AccountId)
+            .Select(x => new GetTweet()
+            {
+                AccountId = x.Key,
+                LastTweetId = x.First().LastTweetId,
+                ChannelIds = x.Select(y => y.ChannelId).Distinct().ToList()
+            }).ToListAsync();
+    }
+
+    public async Task UpdateTweet(long AccountId, long TweetId)
+    {
+        await _context.TwitterPosts
+            .Where(e=>e.AccountId==AccountId)
+            .ExecuteUpdateAsync(e=>e
+                .SetProperty(p => p.LastTweetId,TweetId));
     }
 }
