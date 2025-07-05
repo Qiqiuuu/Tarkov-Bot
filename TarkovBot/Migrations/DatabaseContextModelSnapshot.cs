@@ -49,6 +49,28 @@ namespace TarkovBot.Migrations
 
                     b.ToTable("TeamKills", (string)null);
                 });
+
+            modelBuilder.Entity("TarkovBot.Database.Modules.TwitterPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<long?>("LastTweetId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TwitterPosts", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }
