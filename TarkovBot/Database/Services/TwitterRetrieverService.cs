@@ -39,11 +39,11 @@ public class TwitterRetrieverService:ITwitterRetrieverService
             }).ToListAsync();
     }
 
-    public async Task UpdateTweet(long AccountId, long TweetId)
+    public async Task UpdateTweet(long accountId, long tweetId)
     {
         await _context.TwitterPosts
-            .Where(e=>e.AccountId==AccountId)
+            .Where(e=>e.AccountId==accountId)
             .ExecuteUpdateAsync(e=>e
-                .SetProperty(p => p.LastTweetId,TweetId));
+                .SetProperty(p => p.LastTweetId,tweetId));
     }
 }

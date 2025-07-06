@@ -23,8 +23,8 @@ public class TwitterRetrieverController
         return await _twitterRetrieverService.GetRecentTweets();
     }
 
-    public async Task UpdateTweets(long AccountId, long TweetId)
+    public async Task UpdateTweets(long accountId, long tweetId)
     {
-        await _twitterRetrieverService.UpdateTweet(AccountId, TweetId);
+        await _twitterRetrieverService.UpdateTweet(accountId, tweetId);
     }
 } 

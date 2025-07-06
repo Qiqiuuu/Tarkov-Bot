@@ -58,7 +58,8 @@ public class TwitterHTTPClient
         {
             { "max_results", "5" },
             { "expansions", "author_id" },
-            { "user.fields", "username" }
+            { "user.fields", "username" },
+            {"exclude", "replies,retweets"}
         };
         if (sinceId.HasValue)
         {

@@ -24,6 +24,7 @@ public class TwitterMonitoringService:IHostedService, IDisposable
     private readonly TwitterHTTPClient _twitterClient;
     private readonly RestClient _discordClient;
     private readonly TwitterRetrieverController _twitterRetrieverController;
+    private int _currentAccountIndex = 0;
 
 
     public TwitterMonitoringService(
@@ -37,8 +38,7 @@ public class TwitterMonitoringService:IHostedService, IDisposable
         _twitterRetrieverController = twitterRetrieverController;
         _discordClient = discordClient;
         _twitterClient = twitterClient;
-        _pollingInterval = TimeSpan.FromHours(configuration.GetValue<int>("TwitterMonitoringService:PollingInterval"));
-        
+        _pollingInterval = TimeSpan.FromMinutes(configuration.GetValue<int>("TwitterMonitoring:PollingInterval"));
     }
 
 
@@ -51,46 +51,44 @@ public class TwitterMonitoringService:IHostedService, IDisposable
     private async Task CheckTweets(object? state)
     {
         _logger.LogInformation("Checking Tweets...");
-        foreach (var recentTweet in _recentTweets)
+        var recentTweet = _recentTweets[_currentAccountIndex];
+        var user = recentTweet.AccountId;
+        var lastTweet = recentTweet.LastTweetId;
+
+        try
         {
-            var user = recentTweet.AccountId;
-            var lastTweet = recentTweet.LastTweetId;
+            var latestTweets = await _twitterClient.GetTweetsAsync(user, lastTweet ?? null);
 
-            try
+            if (latestTweets != null && latestTweets.Any())
             {
-                var latestTweets = await _twitterClient.GetTweetsAsync(user, lastTweet ?? null);
+                var newestTweetId = latestTweets.Max(t => long.Parse(t.Id));
+                await _twitterRetrieverController.UpdateTweets(recentTweet.AccountId,newestTweetId);
 
-                if (latestTweets != null && latestTweets.Any())
+                foreach (var tweet in latestTweets.OrderBy(t => long.Parse(t.Id)))
                 {
-                    var newestTweetId = latestTweets.Max(t => long.Parse(t.Id));
-                    await _twitterRetrieverController.UpdateTweets(newestTweetId, recentTweet.AccountId);
-
-                    foreach (var tweet in latestTweets.OrderBy(t => long.Parse(t.Id)))
+                    string tweetUrl = $"https://twitter.com/{user}/status/{tweet.Id}";
+                    _logger.LogInformation($"New tweet from {user}: {tweet.Text}");
+                    
+                    foreach (var channelId in recentTweet.ChannelIds)
                     {
-                        string tweetUrl = $"https://twitter.com/{user}/status/{tweet.Id}";
-                        _logger.LogInformation($"New tweet from {user}: {tweet.Text}");
-
-                        foreach (var channelId in recentTweet.ChannelIds)
+                        var channel = await _discordClient.GetChannelAsync(channelId);
+                        if (channel is TextChannel textChannel)
                         {
-                            var channel = await _discordClient.GetChannelAsync(channelId);
-                            if (channel is TextChannel textChannel)
-                            {
-                                await textChannel.SendMessageAsync(tweetUrl);
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"Channel {channelId} not found");
-                            }
+                            await textChannel.SendMessageAsync(tweetUrl);
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"Channel {channelId} not found");
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Checking Tweets failed: {ex.Message}");
-            }
         }
-        
+        catch (Exception ex)
+        {
+            _logger.LogError($"Checking Tweets failed: {ex.Message}");
+        }
+        _currentAccountIndex = (_currentAccountIndex + 1) % _recentTweets.Count;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
